@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
 
 	
 	joint_pos *jp;
-	double hip_angle = -0.142;
+	double hip_angle = -0.14;
 	jp = (joint_pos *) malloc(sizeof(joint_pos)*8);
 
 //	hubo_sleep(1.0, &H_state, fs);
