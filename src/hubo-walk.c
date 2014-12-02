@@ -28,15 +28,17 @@ void step_left(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs);
 void step_right(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs);
 void reverse_left(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs);
 void reverse_right(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs);
+void turn_left(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs);
+void turn_right(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs);
 
-#define TIME_BASE SIM_TIME //use SIM_TIME for simulation, and REAL_TIME for a physical robot.
-
+#define TIME_BASE SIM_TIME //use SIM_TIME for simulation, and REAL_TIME for a physical robot. 
 #if TIME_BASE == SIM_TIME
 /* For sleep */
 #include "hubo-sleep-sim.h"
 #elif TIME_BASE == REAL_TIME
 //include a real-time sleep function here in the future
 #endif
+
 /* Ach Channel IDs */
 ach_channel_t chan_hubo_ref;      // Feed-Forward (Reference)
 ach_channel_t chan_hubo_state;    // Feed-Back (State)
@@ -68,9 +70,13 @@ int main(int argc, char **argv) {
     if(ACH_OK != r) {
         assert( sizeof(H_state) == fs );
     }
-	reverse_left(&H_ref, &H_state, fs);
-//	step_right(&H_ref, &H_state, fs);
-//	step_left(&H_ref, &H_state, fs);
+	turn_right(&H_ref, &H_state, fs);
+#if 0
+	step_left(&H_ref, &H_state, fs);
+	reverse_right(&H_ref, &H_state, fs);
+	step_right(&H_ref, &H_state, fs);
+	reverse_left(&H_ref, &H_state, fs);	
+#endif
 }
 
 
@@ -82,8 +88,6 @@ void step_left(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs){
 	double lean = -0.8; //-1.0
 	jp = (joint_pos *) malloc(sizeof(joint_pos)*8);
 
-//	hubo_sleep(1.0, H_state, fs);
-
 	printf("Moving hips into position over right foot\n");
 	jp[0].j = LHR;
 	jp[0].p = -1.0 * hip_angle;
@@ -94,7 +98,6 @@ void step_left(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs){
 	jp[3].j = RAR;
 	jp[3].p = hip_angle;
 	controlled_move(jp, 4, 24, H_state, H_ref, fs);
-	hubo_sleep(2.0, H_state, fs);
 
 	printf("balance on right leg\n");
 	jp[0].j = LHP;
@@ -104,7 +107,6 @@ void step_left(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs){
 	jp[2].j = LAP;
 	jp[2].p = leg_bend_left;
 	controlled_move(jp, 3, 8, H_state, H_ref, fs);
-	hubo_sleep(2.0, H_state, fs);	
 	
 	printf("squat down on right leg\n");
 	jp[0].j = RHP;
@@ -118,7 +120,6 @@ void step_left(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs){
 	jp[4].j = LAP;
 	jp[4].p = -leg_bend_left;
 	controlled_move(jp, 5, 10, H_state, H_ref, fs);
-	hubo_sleep(2.0, H_state, fs);
 
 	printf("lean forward\n");
 	jp[0].j = RHP;	
@@ -127,10 +128,7 @@ void step_left(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs){
 	jp[1].p = lean;
 	jp[2].j = LAP;
 	jp[2].p = -leg_bend_right;
-//	jp[3].j = RAP;
-//	jp[3].p = -leg_bend_right;
-	controlled_move(jp, 3, 16, H_state, H_ref, fs);//3
-	hubo_sleep(2.0, H_state, fs);
+	controlled_move(jp, 3, 16, H_state, H_ref, fs);
 
 	printf("Center hips\n");
 	jp[0].j = RHR;
@@ -142,7 +140,6 @@ void step_left(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs){
 	jp[3].j = LAR;
 	jp[3].p = 0.0;
 	controlled_move(jp, 4, 24, H_state, H_ref, fs);
-	hubo_sleep(2.0, H_state, fs);
 
 	printf("Straighten right knee\n");
 	jp[0].j = RHP;	
@@ -158,7 +155,6 @@ void step_left(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs){
 	jp[5].j = LHP;
 	jp[5].p = leg_bend_left;
 	controlled_move(jp, 6, 45, H_state, H_ref, fs);
-	hubo_sleep(2.0, H_state, fs);
 
 	printf("Moving hips into position over left foot\n");
 	jp[0].j = RHR;
@@ -170,7 +166,6 @@ void step_left(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs){
 	jp[3].j = LAR;
 	jp[3].p = -1.0 * hip_angle;
 	controlled_move(jp, 4, 30, H_state, H_ref, fs);
-	hubo_sleep(2.0, H_state, fs);
 
 	printf("Straighten left leg\n");
 	jp[0].j = LHP;
@@ -180,7 +175,6 @@ void step_left(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs){
 	jp[2].j = LAP;
 	jp[2].p = 0.0;
 	controlled_move(jp, 3, 10, H_state, H_ref, fs);
-	hubo_sleep(2.0, H_state, fs);
 
 	printf("Balancing on left leg\n");
 	jp[0].j = RHP;
@@ -190,7 +184,6 @@ void step_left(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs){
 	jp[2].j = RAP;
 	jp[2].p = leg_bend_right;
 	controlled_move(jp, 3, 8, H_state, H_ref, fs);
-	hubo_sleep(2.0, H_state, fs);
 
 	printf("Put right foot down on ground\n");
 	jp[0].j = RHP;
@@ -219,8 +212,8 @@ void step_right(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs){
 	joint_pos *jp;
 	double hip_angle = -0.14;
 	double leg_bend_left = -0.4;
-	double leg_bend_right = leg_bend_left; //-0.65
-	double lean = -0.8; //-1.0
+	double leg_bend_right = leg_bend_left;
+	double lean = -0.8;
 	jp = (joint_pos *) malloc(sizeof(joint_pos)*8);
 
 
@@ -234,7 +227,6 @@ void step_right(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs){
 	jp[3].j = LAR;
 	jp[3].p = -1.0 * hip_angle;
 	controlled_move(jp, 4, 30, H_state, H_ref, fs);
-	hubo_sleep(2.0, H_state, fs);
 
 	printf("Straighten left leg\n");
 	jp[0].j = LHP;
@@ -244,7 +236,6 @@ void step_right(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs){
 	jp[2].j = LAP;
 	jp[2].p = 0.0;
 	controlled_move(jp, 3, 10, H_state, H_ref, fs);
-	hubo_sleep(2.0, H_state, fs);
 
 	printf("Balancing on left leg\n");
 	jp[0].j = RHP;
@@ -254,7 +245,6 @@ void step_right(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs){
 	jp[2].j = RAP;
 	jp[2].p = leg_bend_right;
 	controlled_move(jp, 3, 8, H_state, H_ref, fs);
-	hubo_sleep(2.0, H_state, fs);	
 
 	printf("step forward with right leg\n");
 	jp[0].j = LHP;
@@ -268,7 +258,6 @@ void step_right(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs){
 	jp[4].j = RAP;
 	jp[4].p = -1.0 * leg_bend_right;
 	controlled_move(jp, 5, 20, H_state, H_ref, fs);
-	hubo_sleep(2.0, H_state, fs);
 
 	printf("lean forward\n");
 	jp[0].j = RHP;	
@@ -277,10 +266,7 @@ void step_right(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs){
 	jp[1].p = lean;
 	jp[2].j = RAP;
 	jp[2].p = -leg_bend_left;
-//	jp[3].j = LAP;
-//	jp[3].p = -leg_bend_right;
 	controlled_move(jp, 3, 16, H_state, H_ref, fs);
-	hubo_sleep(2.0, H_state, fs);
 
 	printf("Center hips\n");
 	jp[0].j = RHR;
@@ -292,7 +278,6 @@ void step_right(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs){
 	jp[3].j = LAR;
 	jp[3].p = 0.0;
 	controlled_move(jp, 4, 24, H_state, H_ref, fs);
-	hubo_sleep(2.0, H_state, fs);
 
 	printf("Straighten left knee\n");
 	jp[0].j = RHP;	
@@ -308,7 +293,6 @@ void step_right(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs){
 	jp[5].j = RAP;
 	jp[5].p = leg_bend_right;
 	controlled_move(jp, 6, 45, H_state, H_ref, fs);
-	hubo_sleep(2.0, H_state, fs);
 
 	printf("Moving hips into position over right foot\n");
 	jp[0].j = RHR;
@@ -320,7 +304,6 @@ void step_right(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs){
 	jp[3].j = LAR;
 	jp[3].p = hip_angle;
 	controlled_move(jp, 4, 30, H_state, H_ref, fs);
-	hubo_sleep(2.0, H_state, fs);
 
 	printf("Straighten right leg\n");
 	jp[0].j = RHP;
@@ -339,7 +322,6 @@ void step_right(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs){
 	jp[2].j = LAP;
 	jp[2].p = leg_bend_left;
 	controlled_move(jp, 3, 8, H_state, H_ref, fs);
-	hubo_sleep(2.0, H_state, fs);	
 
 	printf("Put left foot down on ground\n");
 	jp[0].j = LHP;
@@ -368,8 +350,8 @@ void reverse_left(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs)
 	joint_pos *jp;
 	double hip_angle = -0.14;
 	double leg_bend_left = -0.4;
-	double leg_bend_right = leg_bend_left; //-0.65
-	double lean = -0.8; //-1.0
+	double leg_bend_right = leg_bend_left;
+	double lean = -0.8;
 	jp = (joint_pos *) malloc(sizeof(joint_pos)*8);
 
 	printf("Moving hips into position over right foot\n");
@@ -382,7 +364,6 @@ void reverse_left(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs)
 	jp[3].j = RAR;
 	jp[3].p = hip_angle;
 	controlled_move(jp, 4, 24, H_state, H_ref, fs);
-	hubo_sleep(2.0, H_state, fs);
 
 	printf("Balancing on right leg\n");
 	jp[0].j = LHP;
@@ -392,7 +373,6 @@ void reverse_left(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs)
 	jp[2].j = LAP;
 	jp[2].p = leg_bend_left;
 	controlled_move(jp, 3, 8, H_state, H_ref, fs);
-	hubo_sleep(2.0, H_state, fs);	
 
 	printf("Straighten left knee\n");
 	jp[0].j = RHP;	
@@ -408,7 +388,6 @@ void reverse_left(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs)
 	jp[5].j = RAP;
 	jp[5].p = leg_bend_right;
 	controlled_move(jp, 6, 45, H_state, H_ref, fs);
-	hubo_sleep(2.0, H_state, fs);
 
 	printf("Center hips\n");
 	jp[0].j = RHR;
@@ -420,7 +399,6 @@ void reverse_left(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs)
 	jp[3].j = LAR;
 	jp[3].p = 0.0;
 	controlled_move(jp, 4, 24, H_state, H_ref, fs);
-	hubo_sleep(2.0, H_state, fs);
 
 	printf("step forward with right leg\n");
 	jp[0].j = LHP;
@@ -434,7 +412,7 @@ void reverse_left(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs)
 	jp[4].j = RAP;
 	jp[4].p = -1.0 * leg_bend_right;
 	controlled_move(jp, 5, 20, H_state, H_ref, fs);
-	hubo_sleep(2.0, H_state, fs);
+	hubo_sleep(1.0, H_state, fs);
 
 	printf("Moving hips into position over left foot\n");
 	jp[0].j = RHR;
@@ -446,7 +424,6 @@ void reverse_left(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs)
 	jp[3].j = LAR;
 	jp[3].p = -1.0 * hip_angle;
 	controlled_move(jp, 4, 30, H_state, H_ref, fs);
-	hubo_sleep(2.0, H_state, fs);
 
 	printf("Straighten left leg\n");
 	jp[0].j = LHP;
@@ -456,7 +433,6 @@ void reverse_left(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs)
 	jp[2].j = LAP;
 	jp[2].p = 0.0;
 	controlled_move(jp, 3, 10, H_state, H_ref, fs);
-	hubo_sleep(2.0, H_state, fs);
 
 	printf("Balancing on left leg\n");
 	jp[0].j = RHP;
@@ -466,7 +442,308 @@ void reverse_left(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs)
 	jp[2].j = RAP;
 	jp[2].p = leg_bend_right;
 	controlled_move(jp, 3, 8, H_state, H_ref, fs);
-	hubo_sleep(2.0, H_state, fs);	
+	hubo_sleep(1.0, H_state, fs);	
+
+	printf("Put right foot down on ground\n");
+	jp[0].j = RHP;
+	jp[0].p = 0.0;
+	jp[1].j = RKN;
+	jp[1].p = 0.0;
+	jp[2].j = RAP;
+	jp[2].p = 0.0;
+	controlled_move(jp, 3, 20, H_state, H_ref, fs);
+
+	printf("Recenter hips.  Walking complete.\n");
+	jp[0].j = RHR;
+	jp[0].p = 0.0;
+	jp[1].j = LHR;
+	jp[1].p = 0.0;
+	jp[2].j = RAR;
+	jp[2].p = 0.0;
+	jp[3].j = LAR;
+	jp[3].p = 0.0;
+	controlled_move(jp, 4, 24, H_state, H_ref, fs);
+
+	free(jp);
+}
+
+void reverse_right(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs){
+	joint_pos *jp;
+	double hip_angle = -0.14;
+	double leg_bend_left = -0.4;
+	double leg_bend_right = leg_bend_left;
+	double lean = -0.8;
+	jp = (joint_pos *) malloc(sizeof(joint_pos)*8);
+
+	printf("Moving hips into position over left foot\n");
+	jp[0].j = RHR;
+	jp[0].p = hip_angle;
+	jp[1].j = LHR;
+	jp[1].p = hip_angle;
+	jp[2].j = RAR;
+	jp[2].p = -1.0 * hip_angle;
+	jp[3].j = LAR;
+	jp[3].p = -1.0 * hip_angle;
+	controlled_move(jp, 4, 30, H_state, H_ref, fs);
+
+	printf("Balancing on left leg\n");
+	jp[0].j = RHP;
+	jp[0].p = leg_bend_right;
+	jp[1].j = RKN;
+	jp[1].p = -2.0 * leg_bend_right;
+	jp[2].j = RAP;
+	jp[2].p = leg_bend_right;
+	controlled_move(jp, 3, 8, H_state, H_ref, fs);
+
+	printf("Straighten right knee\n");
+	jp[0].j = RHP;	
+	jp[0].p = -leg_bend_left;
+	jp[1].j = LKN;
+	jp[1].p = -2.0*leg_bend_left;
+	jp[2].j = RKN;
+	jp[2].p = 0.0;
+	jp[3].j = LAP;
+	jp[3].p = leg_bend_left;
+	jp[4].j = RAP;
+	jp[4].p = leg_bend_right;
+	jp[5].j = LHP;
+	jp[5].p = leg_bend_left;
+	controlled_move(jp, 6, 45, H_state, H_ref, fs);
+
+	printf("Center hips\n");
+	jp[0].j = RHR;
+	jp[0].p = 0.0;
+	jp[1].j = LHR;
+	jp[1].p = 0.0;
+	jp[2].j = RAR;
+	jp[2].p = 0.0;
+	jp[3].j = LAR;
+	jp[3].p = 0.0;
+	controlled_move(jp, 4, 24, H_state, H_ref, fs);
+
+	printf("squat down on right leg\n");
+	jp[0].j = RHP;
+	jp[0].p = leg_bend_right;
+	jp[1].j = RKN;
+	jp[1].p = -2.0 * leg_bend_right;
+	jp[2].j = RAP;
+	jp[2].p = leg_bend_right;
+	jp[3].j = LKN;
+	jp[3].p = 0.0;
+	jp[4].j = LAP;
+	jp[4].p = -leg_bend_left;
+	controlled_move(jp, 5, 20, H_state, H_ref, fs);
+	hubo_sleep(1.0, H_state, fs);
+
+	printf("Moving hips into position over right foot\n");
+	jp[0].j = LHR;
+	jp[0].p = -1.0 * hip_angle;
+	jp[1].j = RHR;
+	jp[1].p = -1.0 * hip_angle;
+	jp[2].j = LAR;
+	jp[2].p = hip_angle;
+	jp[3].j = RAR;
+	jp[3].p = hip_angle;
+	controlled_move(jp, 4, 24, H_state, H_ref, fs);
+
+	printf("Straighten right leg\n");
+	jp[0].j = RHP;
+	jp[0].p = 0.0;
+	jp[1].j = RKN;
+	jp[1].p = 0.0;
+	jp[2].j = RAP;
+	jp[2].p = 0.0;
+	controlled_move(jp, 3, 20, H_state, H_ref, fs);
+
+	printf("Balancing on right leg\n");
+	jp[0].j = LHP;
+	jp[0].p = leg_bend_left;
+	jp[1].j = LKN;
+	jp[1].p = -2.0 * leg_bend_left;
+	jp[2].j = LAP;
+	jp[2].p = leg_bend_left;
+	controlled_move(jp, 3, 8, H_state, H_ref, fs);
+	hubo_sleep(1.0, H_state, fs);	
+
+	printf("Put left foot down on ground\n");
+	jp[0].j = LHP;
+	jp[0].p = 0.0;
+	jp[1].j = LKN;
+	jp[1].p = 0.0;
+	jp[2].j = LAP;
+	jp[2].p = 0.0;
+	controlled_move(jp, 3, 20, H_state, H_ref, fs);
+
+	printf("Recenter hips.  Walking complete.\n");
+	jp[0].j = RHR;
+	jp[0].p = 0.0;
+	jp[1].j = LHR;
+	jp[1].p = 0.0;
+	jp[2].j = RAR;
+	jp[2].p = 0.0;
+	jp[3].j = LAR;
+	jp[3].p = 0.0;
+	controlled_move(jp, 4, 24, H_state, H_ref, fs);
+
+	free(jp);
+}
+
+void turn_left(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs){
+	joint_pos *jp;
+	double hip_angle = -0.14;
+	double leg_bend_left = -0.3;
+	double leg_bend_right = leg_bend_left;
+	double turn_angle = 0.30;
+	jp = (joint_pos *) malloc(sizeof(joint_pos)*8);
+
+	printf("Moving hips into position over left foot\n");
+	jp[0].j = RHR;
+	jp[0].p = hip_angle;
+	jp[1].j = LHR;
+	jp[1].p = hip_angle;
+	jp[2].j = RAR;
+	jp[2].p = -1.0 * hip_angle;
+	jp[3].j = LAR;
+	jp[3].p = -1.0 * hip_angle;
+	controlled_move(jp, 4, 30, H_state, H_ref, fs);
+
+	printf("Balancing on left leg\n");
+	jp[0].j = RHP;
+	jp[0].p = leg_bend_right;
+	jp[1].j = RKN;
+	jp[1].p = -2.0 * leg_bend_right;
+	jp[2].j = RAP;
+	jp[2].p = leg_bend_right;
+	controlled_move(jp, 3, 4, H_state, H_ref, fs);
+
+	printf("Turning right leg\n");
+	jp[0].j = RHY;
+	jp[0].p = turn_angle;
+	controlled_move(jp, 1, 8, H_state, H_ref, fs);
+
+	printf("Put right foot down on ground\n");
+	jp[0].j = RHP;
+	jp[0].p = 0.0;
+	jp[1].j = RKN;
+	jp[1].p = 0.0;
+	jp[2].j = RAP;
+	jp[2].p = 0.0;
+	controlled_move(jp, 3, 20, H_state, H_ref, fs);
+
+	printf("Moving hips into position over right foot\n");
+	jp[0].j = LHR;
+	jp[0].p = -1.0 * hip_angle;
+	jp[1].j = RHR;
+	jp[1].p = -1.0 * hip_angle;
+	jp[2].j = LAR;
+	jp[2].p = hip_angle;
+	jp[3].j = RAR;
+	jp[3].p = hip_angle;
+	controlled_move(jp, 4, 24, H_state, H_ref, fs);
+
+	printf("Balancing on right leg\n");
+	jp[0].j = LHP;
+	jp[0].p = leg_bend_left;
+	jp[1].j = LKN;
+	jp[1].p = -2.0 * leg_bend_left;
+	jp[2].j = LAP;
+	jp[2].p = leg_bend_left;
+	controlled_move(jp, 3, 4, H_state, H_ref, fs);
+
+	printf("Turning body\n");
+	jp[0].j = RHY;
+	jp[0].p = 0.0;
+	controlled_move(jp, 1, 8, H_state, H_ref, fs);
+
+	printf("Put left foot down on ground\n");
+	jp[0].j = LHP;
+	jp[0].p = 0.0;
+	jp[1].j = LKN;
+	jp[1].p = 0.0;
+	jp[2].j = LAP;
+	jp[2].p = 0.0;
+	controlled_move(jp, 3, 20, H_state, H_ref, fs);
+
+	printf("Recenter hips.  Walking complete.\n");
+	jp[0].j = RHR;
+	jp[0].p = 0.0;
+	jp[1].j = LHR;
+	jp[1].p = 0.0;
+	jp[2].j = RAR;
+	jp[2].p = 0.0;
+	jp[3].j = LAR;
+	jp[3].p = 0.0;
+	controlled_move(jp, 4, 24, H_state, H_ref, fs);
+
+	free(jp);
+}
+
+void turn_right(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs){
+	joint_pos *jp;
+	double hip_angle = -0.14;
+	double leg_bend_left = -0.3;
+	double leg_bend_right = leg_bend_left;
+	double turn_angle = 0.30;
+	jp = (joint_pos *) malloc(sizeof(joint_pos)*8);
+
+	printf("Moving hips into position over right foot\n");
+	jp[0].j = LHR;
+	jp[0].p = -1.0 * hip_angle;
+	jp[1].j = RHR;
+	jp[1].p = -1.0 * hip_angle;
+	jp[2].j = LAR;
+	jp[2].p = hip_angle;
+	jp[3].j = RAR;
+	jp[3].p = hip_angle;
+	controlled_move(jp, 4, 24, H_state, H_ref, fs);
+
+	printf("Balancing on right leg\n");
+	jp[0].j = LHP;
+	jp[0].p = leg_bend_left;
+	jp[1].j = LKN;
+	jp[1].p = -2.0 * leg_bend_left;
+	jp[2].j = LAP;
+	jp[2].p = leg_bend_left;
+	controlled_move(jp, 3, 4, H_state, H_ref, fs);
+
+	printf("Turning left leg\n");
+	jp[0].j = LHY;
+	jp[0].p = -turn_angle;
+	controlled_move(jp, 1, 8, H_state, H_ref, fs);
+
+	printf("Put left foot down on ground\n");
+	jp[0].j = LHP;
+	jp[0].p = 0.0;
+	jp[1].j = LKN;
+	jp[1].p = 0.0;
+	jp[2].j = LAP;
+	jp[2].p = 0.0;
+	controlled_move(jp, 3, 20, H_state, H_ref, fs);
+
+	printf("Moving hips into position over left foot\n");
+	jp[0].j = RHR;
+	jp[0].p = hip_angle;
+	jp[1].j = LHR;
+	jp[1].p = hip_angle;
+	jp[2].j = RAR;
+	jp[2].p = -1.0 * hip_angle;
+	jp[3].j = LAR;
+	jp[3].p = -1.0 * hip_angle;
+	controlled_move(jp, 4, 30, H_state, H_ref, fs);
+
+	printf("Balancing on left leg\n");
+	jp[0].j = RHP;
+	jp[0].p = leg_bend_right;
+	jp[1].j = RKN;
+	jp[1].p = -2.0 * leg_bend_right;
+	jp[2].j = RAP;
+	jp[2].p = leg_bend_right;
+	controlled_move(jp, 3, 4, H_state, H_ref, fs);
+
+	printf("Turning body\n");
+	jp[0].j = LHY;
+	jp[0].p = 0.0;
+	controlled_move(jp, 1, 8, H_state, H_ref, fs);
 
 	printf("Put right foot down on ground\n");
 	jp[0].j = RHP;
