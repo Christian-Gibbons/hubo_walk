@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 #include "hubo-controlled-move.h"
-
+#include "hubo-sleep-sim.h"
 
 extern ach_channel_t chan_hubo_ref;      // Feed-Forward (Reference)
 extern ach_channel_t chan_hubo_state;    // Feed-Back (State)
@@ -33,6 +33,6 @@ void controlled_move(joint_pos *p, int joint_num, int step_num, struct hubo_stat
 #endif
 		}
 		ach_put( &chan_hubo_ref, H_ref, sizeof(*H_ref));
-		usleep(100000);
+		hubo_sleep(0.05, H_state, fs);
 	}
 }
