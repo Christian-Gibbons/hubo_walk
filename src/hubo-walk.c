@@ -70,17 +70,19 @@ int main(int argc, char **argv) {
     if(ACH_OK != r) {
         assert( sizeof(H_state) == fs );
     }
-	turn_right(&H_ref, &H_state, fs);
-#if 0
+
 	step_left(&H_ref, &H_state, fs);
-	reverse_right(&H_ref, &H_state, fs);
-	step_right(&H_ref, &H_state, fs);
+	turn_left(&H_ref, &H_state, fs);
 	reverse_left(&H_ref, &H_state, fs);	
-#endif
+	turn_right(&H_ref, &H_state, fs);
+	step_right(&H_ref, &H_state, fs);
+	reverse_right(&H_ref, &H_state, fs);
+
 }
 
 
 void step_left(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs){
+	printf("Step Left:\n");
 	joint_pos *jp;
 	double hip_angle = -0.14;
 	double leg_bend_left = -0.4;
@@ -209,6 +211,7 @@ void step_left(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs){
 }
 
 void step_right(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs){
+	printf("Step Right:\n");
 	joint_pos *jp;
 	double hip_angle = -0.14;
 	double leg_bend_left = -0.4;
@@ -347,6 +350,7 @@ void step_right(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs){
 }
 
 void reverse_left(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs){
+	printf("Reverse Left:\n");
 	joint_pos *jp;
 	double hip_angle = -0.14;
 	double leg_bend_left = -0.4;
@@ -468,6 +472,7 @@ void reverse_left(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs)
 }
 
 void reverse_right(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs){
+	printf("Reverse Right:\n");
 	joint_pos *jp;
 	double hip_angle = -0.14;
 	double leg_bend_left = -0.4;
@@ -589,6 +594,7 @@ void reverse_right(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs
 }
 
 void turn_left(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs){
+	printf("Turn Left:\n");
 	joint_pos *jp;
 	double hip_angle = -0.14;
 	double leg_bend_left = -0.3;
@@ -679,6 +685,7 @@ void turn_left(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs){
 }
 
 void turn_right(struct hubo_ref *H_ref, struct hubo_state *H_state, size_t fs){
+	printf("Turn Right:\n");
 	joint_pos *jp;
 	double hip_angle = -0.14;
 	double leg_bend_left = -0.3;
